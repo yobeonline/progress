@@ -1,3 +1,6 @@
 [submodule "vcpkg"]
 	path = vcpkg
 	url = ../../microsoft/vcpkg.git
+[submodule "add_target"]
+	path = add_target
+	url = ../add_target.git
