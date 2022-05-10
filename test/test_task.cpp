@@ -10,7 +10,7 @@ BOOST_AUTO_TEST_CASE(range_semantic)
   bool started = false;
   bool finished = false;
 
-  std::vector<int> const vec = { 1, 2, 3, 4, 5 };
+  std::vector<int> const vec = {1, 2, 3, 4, 5};
 
   auto const start = [&index, &started, &finished]
   {
@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE(range_semantic)
 
   auto const report = [&index, &started, &finished](float progress)
   {
-    constexpr float expected[] = { 20.f, 40.f, 60.f, 80.f, 100.f };
+    constexpr float expected[] = {20.f, 40.f, 60.f, 80.f, 100.f};
     BOOST_CHECK_EQUAL(progress, expected[index]);
     BOOST_CHECK(started);
     BOOST_CHECK(!finished);
@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(range_semantic)
   {
     io1::progress::task t({start, report, finish});
     size_t i = 0;
-    for (auto const& v : vec | t) BOOST_CHECK_EQUAL(v, vec[i++]);
+    for (auto const & v : vec | t) BOOST_CHECK_EQUAL(v, vec[i++]);
   }
 
   BOOST_CHECK(started);

@@ -1,0 +1,37 @@
+name: unit tests
+on: [push]
+
+jobs:
+  unit-tests:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        config: [Release, Debug]
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'true'
+
+      - name: Get latest cmake
+        uses: lukka/get-cmake@latest
+
+      - name: set compiler
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          echo "CXX=g++-10" >> $GITHUB_ENV
+          echo "CC=gcc-10" >> $GITHUB_ENV
+
+      - name: Configure
+        run: cmake -DCMAKE_BUILD_TYPE=${{ matrix.config }} --toolchain ../vcpkg/scripts/buildsystems/vcpkg.cmake -B build -S .
+
+      - name: Build
+        run: cmake --build build --config ${{ matrix.config }} --parallel
+
+      - name: Execute
+        run: ctest --test-dir build -C ${{ matrix.config }}
+
+      - name: Publish test report
+        uses: mikepenz/action-junit-report@v3
+        with:
+          report_paths: 'build/bin/junit_*.xml'
