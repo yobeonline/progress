@@ -12,8 +12,9 @@ BOOST_AUTO_TEST_CASE(range_semantic)
 
   std::vector<int> const vec = {1, 2, 3, 4, 5};
 
-  auto const start = [&index, &started, &finished]
+  auto const start = [&index, &started, &finished](std::string_view name)
   {
+    BOOST_CHECK(std::empty(name));
     BOOST_CHECK_EQUAL(0, index);
     BOOST_CHECK(!started);
     BOOST_CHECK(!finished);

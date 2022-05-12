@@ -1,13 +1,14 @@
 #pragma once
 #include <functional>
 #include <iostream>
+#include <string>
 
 namespace io1::progress
 {
 
   struct report_functions
   {
-    std::function<void()> start{[] {}};
+    std::function<void(std::string_view name)> start{[](auto) {}};
     std::function<void(float)> progress{[](auto) {}};
     std::function<void(bool)> finish{[](auto) {}};
   };
@@ -16,6 +17,7 @@ namespace io1::progress
   {
   public:
     task() = default;
+    explicit task(std::string name) noexcept : name_(std::move(name)){};
     task(task const &) = delete;
     task(task &&) = default;
     task & operator=(task const &) = delete;
@@ -28,7 +30,7 @@ namespace io1::progress
     {
       target_ = target;
       progress_ = 0;
-      report_.start();
+      report_.start(name_);
     };
 
     task & operator++()
@@ -40,6 +42,7 @@ namespace io1::progress
     [[nodiscard]] bool success() const noexcept { return target_ <= progress_; };
 
   private:
+    std::string name_;
     size_t target_;
     size_t progress_;
     report_functions report_;
