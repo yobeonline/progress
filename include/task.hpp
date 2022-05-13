@@ -49,6 +49,7 @@ namespace io1::progress
 
   private:
     std::string name_;
+    size_t nesting_{0};
     size_t target_;
     size_t progress_;
     report_functions report_;
