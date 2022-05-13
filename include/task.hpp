@@ -33,7 +33,7 @@ namespace io1::progress
       report_.start(name_);
     };
 
-    task & operator++()
+    task & operator++() noexcept
     {
       ++progress_;
       report_.progress((100.f * progress_) / target_);
