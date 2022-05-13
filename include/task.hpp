@@ -39,6 +39,12 @@ namespace io1::progress
       report_.progress((100.f * progress_) / target_);
       return *this;
     };
+    task & operator+=(size_t n) noexcept
+    {
+      progress_+=n;
+      report_.progress((100.f * progress_) / target_);
+      return *this;
+    };
     [[nodiscard]] bool success() const noexcept { return target_ <= progress_; };
 
   private:
