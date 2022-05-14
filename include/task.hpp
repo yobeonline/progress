@@ -1,4 +1,5 @@
 #pragma once
+#include <chrono>
 #include <functional>
 #include <iostream>
 #include <string>
@@ -13,6 +14,7 @@ namespace io1::progress
     std::function<void(bool)> finish{[](auto) {}};
   };
 
+  template <unsigned int REPORT_INTERVAL_MS = 100>
   class task
   {
   public:
@@ -30,36 +32,51 @@ namespace io1::progress
     {
       target_ = target;
       progress_ = 0;
+      next_report_ = now() + report_interval();
       report_.start(name_);
     };
 
-    task & operator++() noexcept
-    {
-      ++progress_;
-      report_.progress((100.f * progress_) / target_);
-      return *this;
-    };
+    task & operator++() noexcept { return operator+=(1); };
+
     task & operator+=(size_t n) noexcept
     {
-      progress_+=n;
-      report_.progress((100.f * progress_) / target_);
+      progress_ += n;
+      report_progress();
       return *this;
     };
     [[nodiscard]] bool success() const noexcept { return target_ <= progress_; };
 
   private:
+    [[nodiscard]] auto calculate_progress() const noexcept { return (100.f * progress_) / target_; };
+
+    [[nodiscard]] static auto now() noexcept { return std::chrono::steady_clock::now(); };
+    [[nodiscard]] static auto report_interval() noexcept { return std::chrono::milliseconds(REPORT_INTERVAL_MS); };
+
+    void report_progress() const noexcept
+    {
+      auto const n = now();
+      if (n < next_report_) return;
+
+      next_report_ = n + report_interval();
+      report_.progress(calculate_progress());
+    }
+
+  private:
+    using time_point_t = decltype(std::chrono::steady_clock::now());
+
     std::string name_;
     size_t nesting_{0};
-    size_t target_;
-    size_t progress_;
+    size_t target_{0};
+    size_t progress_{0};
     report_functions report_;
+    mutable time_point_t next_report_;
   };
 
   template <typename ITERATOR>
   class task_iterator_wrapper
   {
   public:
-    task_iterator_wrapper(ITERATOR it, task & t) : t_(&t), it_(it){};
+    task_iterator_wrapper(ITERATOR it, task<> & t) : t_(&t), it_(it){};
     using value_type = typename ITERATOR::value_type;
     const value_type operator*() const noexcept { return *it_; };
     const value_type & operator->() const noexcept { return it_.operator->(); };
@@ -75,7 +92,7 @@ namespace io1::progress
 
   private:
     ITERATOR it_;
-    task * t_;
+    task<> * t_;
   };
 
   template <typename RANGE>
@@ -83,18 +100,18 @@ namespace io1::progress
   {
   public:
     using iterator_type = typename RANGE::const_iterator;
-    explicit task_view(RANGE const & r, task & t) noexcept : r_(&r), t_(&t) { t_->start(std::size(*r_)); };
+    explicit task_view(RANGE const & r, task<> & t) noexcept : r_(&r), t_(&t) { t_->start(std::size(*r_)); };
 
     auto begin() const { return task_iterator_wrapper<iterator_type>{std::begin(*r_), *t_}; };
     auto end() const { return task_iterator_wrapper<iterator_type>{std::end(*r_), *t_}; };
 
   private:
     RANGE const * r_;
-    task * t_;
+    task<> * t_;
   };
 
   template <typename RANGE>
-  auto operator|(RANGE const & r, task & t)
+  auto operator|(RANGE const & r, task<> & t)
   {
     return task_view<RANGE>(r, t);
   };

@@ -1,4 +1,5 @@
 #include "task.hpp"
+#include <thread>
 #include <vector>
 
 #define BOOST_TEST_MODULE io1::progress test
@@ -40,9 +41,13 @@ BOOST_AUTO_TEST_CASE(range_semantic)
   };
 
   {
-    io1::progress::task t({start, report, finish});
+    io1::progress::task<100> t({start, report, finish});
     size_t i = 0;
-    for (auto const & v : vec | t) BOOST_CHECK_EQUAL(v, vec[i++]);
+    for (auto const & v : vec | t)
+    {
+      BOOST_CHECK_EQUAL(v, vec[i++]);
+      std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    }
   }
 
   BOOST_CHECK(started);
