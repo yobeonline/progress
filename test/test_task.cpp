@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(range_semantic)
   };
 
   {
-    io1::progress::task<100> t({start, report, finish});
+    io1::progress::basic_task<100> t({start, report, finish});
     size_t i = 0;
     for (auto const & v : vec | t)
     {

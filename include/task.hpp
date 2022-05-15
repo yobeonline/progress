@@ -15,18 +15,18 @@ namespace io1::progress
   };
 
   template <unsigned int REPORT_INTERVAL_MS = 100>
-  class task
+  class basic_task
   {
   public:
-    task() = default;
-    explicit task(std::string name) noexcept : name_(std::move(name)){};
-    task(task const &) = delete;
-    task(task &&) = default;
-    task & operator=(task const &) = delete;
-    task & operator=(task &&) = default;
-    ~task() noexcept { report_.finish(success()); };
+    basic_task() = default;
+    explicit basic_task(std::string name) noexcept : name_(std::move(name)){};
+    basic_task(basic_task const &) = delete;
+    basic_task(basic_task &&) = default;
+    basic_task & operator=(basic_task const &) = delete;
+    basic_task & operator=(basic_task &&) = default;
+    ~basic_task() noexcept { report_.finish(success()); };
 
-    explicit task(report_functions report) noexcept : report_(std::move(report)){};
+    explicit basic_task(report_functions report) noexcept : report_(std::move(report)){};
 
     void start(size_t target) noexcept
     {
@@ -36,9 +36,9 @@ namespace io1::progress
       report_.start(name_);
     };
 
-    task & operator++() noexcept { return operator+=(1); };
+    basic_task & operator++() noexcept { return operator+=(1); };
 
-    task & operator+=(size_t n) noexcept
+    basic_task & operator+=(size_t n) noexcept
     {
       progress_ += n;
       report_progress();
@@ -76,7 +76,7 @@ namespace io1::progress
   class task_iterator_wrapper
   {
   public:
-    task_iterator_wrapper(ITERATOR it, task<> & t) : t_(&t), it_(it){};
+    task_iterator_wrapper(ITERATOR it, basic_task<> & t) : t_(&t), it_(it){};
     using value_type = typename ITERATOR::value_type;
     const value_type operator*() const noexcept { return *it_; };
     const value_type & operator->() const noexcept { return it_.operator->(); };
@@ -92,7 +92,7 @@ namespace io1::progress
 
   private:
     ITERATOR it_;
-    task<> * t_;
+    basic_task<> * t_;
   };
 
   template <typename RANGE>
@@ -100,18 +100,18 @@ namespace io1::progress
   {
   public:
     using iterator_type = typename RANGE::const_iterator;
-    explicit task_view(RANGE const & r, task<> & t) noexcept : r_(&r), t_(&t) { t_->start(std::size(*r_)); };
+    explicit task_view(RANGE const & r, basic_task<> & t) noexcept : r_(&r), t_(&t) { t_->start(std::size(*r_)); };
 
     auto begin() const { return task_iterator_wrapper<iterator_type>{std::begin(*r_), *t_}; };
     auto end() const { return task_iterator_wrapper<iterator_type>{std::end(*r_), *t_}; };
 
   private:
     RANGE const * r_;
-    task<> * t_;
+    basic_task<> * t_;
   };
 
   template <typename RANGE>
-  auto operator|(RANGE const & r, task<> & t)
+  auto operator|(RANGE const & r, basic_task<> & t)
   {
     return task_view<RANGE>(r, t);
   };
