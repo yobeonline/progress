@@ -14,8 +14,39 @@ namespace io1::progress
     std::function<void(bool)> finish{[](auto) {}};
   };
 
+  template <unsigned int REPORT_INTERVAL_MS>
+  class report_interval
+  {
+  public:
+    report_interval() : next_report_(now() + report_interval_){};
+
+    [[nodiscard]] bool report_now() const noexcept
+    {
+      auto const n = now();
+      if (n < next_report_) return false;
+
+      next_report_ = n + report_interval_;
+      return true;
+    };
+
+  private:
+    [[nodiscard]] static auto now() noexcept { return std::chrono::steady_clock::now(); };
+
+  private:
+    using time_point_t = decltype(std::chrono::steady_clock::now());
+    std::chrono::milliseconds const report_interval_{REPORT_INTERVAL_MS};
+    mutable time_point_t next_report_;
+  };
+
+  template <>
+  class report_interval<0>
+  {
+  public:
+    [[nodiscard]] bool report_now() const noexcept { return true; };
+  };
+
   template <unsigned int REPORT_INTERVAL_MS = 100>
-  class basic_task
+  class basic_task : private report_interval<REPORT_INTERVAL_MS>
   {
   public:
     basic_task() = default;
@@ -32,7 +63,6 @@ namespace io1::progress
     {
       target_ = target;
       progress_ = 0;
-      next_report_ = now() + report_interval();
       report_.start(name_);
     };
 
@@ -49,27 +79,18 @@ namespace io1::progress
   private:
     [[nodiscard]] auto calculate_progress() const noexcept { return (100.f * progress_) / target_; };
 
-    [[nodiscard]] static auto now() noexcept { return std::chrono::steady_clock::now(); };
-    [[nodiscard]] static auto report_interval() noexcept { return std::chrono::milliseconds(REPORT_INTERVAL_MS); };
-
     void report_progress() const noexcept
     {
-      auto const n = now();
-      if (n < next_report_) return;
-
-      next_report_ = n + report_interval();
-      report_.progress(calculate_progress());
+      if (this->report_now())
+        report_.progress(calculate_progress());
     }
 
   private:
-    using time_point_t = decltype(std::chrono::steady_clock::now());
-
     std::string name_;
     size_t nesting_{0};
     size_t target_{0};
     size_t progress_{0};
     report_functions report_;
-    mutable time_point_t next_report_;
   };
 
   template <typename ITERATOR>
