@@ -3,15 +3,19 @@
 #include <functional>
 #include <iostream>
 #include <string>
+#include <cassert>
 
 namespace io1::progress
 {
+  using start_callback_t = std::function<void(std::string_view)>;
+  using progress_callback_t = std::function<void(float)>;
+  using finish_callback_t = std::function<void(bool)>;
 
   struct report_functions
   {
-    std::function<void(std::string_view name)> start{[](auto) {}};
-    std::function<void(float)> progress{[](auto) {}};
-    std::function<void(bool)> finish{[](auto) {}};
+    start_callback_t start{[](auto) {}};
+    progress_callback_t progress{[](auto) {}};
+    finish_callback_t finish{[](auto) {}};
   };
 
   template <unsigned int REPORT_INTERVAL_MS>
