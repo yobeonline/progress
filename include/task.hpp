@@ -59,12 +59,13 @@ namespace io1::progress
     basic_task(basic_task &&) = default;
     basic_task & operator=(basic_task const &) = delete;
     basic_task & operator=(basic_task &&) = default;
-    ~basic_task() noexcept { report_.finish(success()); };
+    ~basic_task() noexcept { if (target_) report_.finish(success()); };
 
     explicit basic_task(report_functions report) noexcept : report_(std::move(report)){};
 
     void start(size_t target) noexcept
     {
+      assert(target && "There is no point in starting a task with a null target.");
       target_ = target;
       progress_ = 0;
       report_.start(name_);
