@@ -59,7 +59,7 @@ namespace io1::progress
     basic_task(basic_task &&) = default;
     basic_task & operator=(basic_task const &) = delete;
     basic_task & operator=(basic_task &&) = default;
-    ~basic_task() noexcept { if (target_) report_.finish(success()); };
+    ~basic_task() noexcept { if (started()) report_.finish(success()); };
 
     explicit basic_task(report_functions report) noexcept : report_(std::move(report)){};
 
@@ -80,6 +80,12 @@ namespace io1::progress
       return *this;
     };
     [[nodiscard]] bool success() const noexcept { return target_ <= progress_; };
+    [[nodiscard]] bool started() const noexcept { return target_ > 0; };
+
+  public:
+    void set_start_callback(start_callback_t f) noexcept { report_.start = f; };
+    void set_progress_callback(progress_callback_t f) noexcept { report_.progress = f; };
+    void set_finish_callback(finish_callback_t f) noexcept { report_.finish = f; };
 
   private:
     [[nodiscard]] auto calculate_progress() const noexcept { return (100.f * progress_) / target_; };

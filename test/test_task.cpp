@@ -5,6 +5,20 @@
 #define BOOST_TEST_MODULE io1::progress test
 #include <boost/test/unit_test.hpp>
 
+BOOST_AUTO_TEST_CASE(default_construction)
+{
+  bool flag = false;
+  auto const finished = [&flag](bool) { flag = true; };
+
+  {
+    io1::progress::basic_task<100> t;
+    t.set_finish_callback(finished);
+  }
+
+  BOOST_CHECK(!flag);
+  return;
+}
+
 BOOST_AUTO_TEST_CASE(range_semantic)
 {
   size_t index = 0;
