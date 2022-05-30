@@ -1,9 +1,9 @@
 #pragma once
+#include <cassert>
 #include <chrono>
 #include <functional>
 #include <iostream>
 #include <string>
-#include <cassert>
 
 namespace io1::progress
 {
@@ -59,7 +59,10 @@ namespace io1::progress
     basic_task(basic_task &&) = default;
     basic_task & operator=(basic_task const &) = delete;
     basic_task & operator=(basic_task &&) = default;
-    ~basic_task() noexcept { if (started()) report_.finish(success()); };
+    ~basic_task() noexcept
+    {
+      if (started()) report_.finish(success());
+    };
 
     explicit basic_task(report_functions report) noexcept : report_(std::move(report)){};
 
@@ -92,8 +95,7 @@ namespace io1::progress
 
     void report_progress() const noexcept
     {
-      if (this->report_now())
-        report_.progress(calculate_progress());
+      if (this->report_now()) report_.progress(calculate_progress());
     }
 
   private:
