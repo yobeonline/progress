@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(range_semantic)
 
   auto const report = [&index, &started, &finished](float progress)
   {
-    constexpr float expected[] = {20.f, 40.f, 60.f, 80.f, 100.f};
+    constexpr float expected[] = {0.2f, 0.4f, 0.6f, 0.8f, 1.f};
     BOOST_CHECK_EQUAL(progress, expected[index]);
     BOOST_CHECK(started);
     BOOST_CHECK(!finished);

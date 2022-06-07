@@ -91,7 +91,7 @@ namespace io1::progress
     void set_finish_callback(finish_callback_t f) noexcept { report_.finish = f; };
 
   private:
-    [[nodiscard]] auto calculate_progress() const noexcept { return (100.f * progress_) / target_; };
+    [[nodiscard]] auto calculate_progress() const noexcept { return static_cast<float>(progress_) / target_; };
 
     void report_progress() const noexcept
     {
