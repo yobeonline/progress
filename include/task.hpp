@@ -49,7 +49,6 @@ namespace io1::progress
     [[nodiscard]] bool report_now() const noexcept { return true; };
   };
 
-
   // PRECISION controls the minimum progress increment that will be reported
   // MIN_REPORT_INTERVAL_MS says that some time must have ellasped between two reports.
   template <unsigned int PRECISION = 100, unsigned int MIN_REPORT_INTERVAL_MS = 100>
@@ -116,7 +115,7 @@ namespace io1::progress
     report_functions report_;
   };
 
-  using pc_task = basic_task<100,0>;
+  using pc_task = basic_task<100, 0>;
 
   template <typename ITERATOR>
   class task_iterator_wrapper

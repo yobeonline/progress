@@ -10,7 +10,7 @@ namespace
   {
   public:
     explicit progression_check(std::vector<unsigned int> expected_steps, std::string expected_name = std::string())
-        : expected_steps_(expected_steps), expected_name_(expected_name) {};
+        : expected_steps_(expected_steps), expected_name_(expected_name){};
 
     [[nodiscard]] operator io1::progress::report_functions()
     {
@@ -49,7 +49,7 @@ namespace
     bool started_{false};
     bool finished_{false};
   };
-}
+} // namespace
 
 BOOST_AUTO_TEST_CASE(default_construction)
 {
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(default_construction)
 
 BOOST_AUTO_TEST_CASE(basic_incrementations_and_success)
 {
-  progression_check check({20 ,40, 80, 100});
+  progression_check check({20, 40, 80, 100});
 
   {
     io1::progress::pc_task t(check);
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(range_semantic)
   progression_check check({20, 40, 60, 80, 100});
 
   {
-    io1::progress::basic_task<100,100> t(check);
+    io1::progress::basic_task<100, 100> t(check);
 
     std::vector<int> const vec = {1, 2, 3, 4, 5};
 
