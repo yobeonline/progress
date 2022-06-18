@@ -8,7 +8,7 @@
 namespace io1::progress
 {
   using start_callback_t = std::function<void(std::string_view)>;
-  using progress_callback_t = std::function<void(float)>;
+  using progress_callback_t = std::function<void(unsigned int)>;
   using finish_callback_t = std::function<void(bool)>;
 
   struct report_functions
@@ -18,18 +18,18 @@ namespace io1::progress
     finish_callback_t finish{[](auto) {}};
   };
 
-  template <unsigned int REPORT_INTERVAL_MS>
+  template <unsigned int MIN_REPORT_INTERVAL_MS>
   class report_interval
   {
   public:
-    report_interval() : next_report_(now() + report_interval_){};
+    report_interval() : next_report_(now() + min_report_interval_){};
 
     [[nodiscard]] bool report_now() const noexcept
     {
       auto const n = now();
       if (n < next_report_) return false;
 
-      next_report_ = n + report_interval_;
+      next_report_ = n + min_report_interval_;
       return true;
     };
 
@@ -38,7 +38,7 @@ namespace io1::progress
 
   private:
     using time_point_t = decltype(std::chrono::steady_clock::now());
-    std::chrono::milliseconds const report_interval_{REPORT_INTERVAL_MS};
+    std::chrono::milliseconds const min_report_interval_{MIN_REPORT_INTERVAL_MS};
     mutable time_point_t next_report_;
   };
 
@@ -49,8 +49,11 @@ namespace io1::progress
     [[nodiscard]] bool report_now() const noexcept { return true; };
   };
 
-  template <unsigned int REPORT_INTERVAL_MS = 100>
-  class basic_task : private report_interval<REPORT_INTERVAL_MS>
+
+  // PRECISION controls the minimum progress increment that will be reported
+  // MIN_REPORT_INTERVAL_MS says that some time must have ellasped between two reports.
+  template <unsigned int PRECISION = 100, unsigned int MIN_REPORT_INTERVAL_MS = 100>
+  class basic_task : private report_interval<MIN_REPORT_INTERVAL_MS>
   {
   public:
     basic_task() = default;
@@ -66,11 +69,12 @@ namespace io1::progress
 
     explicit basic_task(report_functions report) noexcept : report_(std::move(report)){};
 
-    void start(size_t target) noexcept
+    void start(size_t target, unsigned int public_progress = 0) noexcept
     {
       assert(target && "There is no point in starting a task with a null target.");
       target_ = target;
       progress_ = 0;
+      public_progress_ = public_progress;
       report_.start(name_);
     };
 
@@ -91,20 +95,28 @@ namespace io1::progress
     void set_finish_callback(finish_callback_t f) noexcept { report_.finish = f; };
 
   private:
-    [[nodiscard]] auto calculate_progress() const noexcept { return static_cast<float>(progress_) / target_; };
+    [[nodiscard]] auto calculate_progress() const noexcept
+    {
+      return static_cast<unsigned int>(PRECISION * static_cast<float>(progress_) / target_);
+    };
 
     void report_progress() const noexcept
     {
-      if (this->report_now()) report_.progress(calculate_progress());
-    }
+      auto const progress = calculate_progress();
+      if (this->report_now() || public_progress_ < progress) report_.progress(progress);
+      public_progress_ = progress;
+    };
 
   private:
     std::string name_;
-    size_t nesting_{0};
     size_t target_{0};
     size_t progress_{0};
+    mutable unsigned int public_progress_{0};
+    unsigned int nesting_{0};
     report_functions report_;
   };
+
+  using pc_task = basic_task<100,0>;
 
   template <typename ITERATOR>
   class task_iterator_wrapper
